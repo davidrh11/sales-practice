@@ -458,7 +458,7 @@
     <div class="card">
       <div class="card-label">Today's Scenario</div>
       <h2>Marcus Webb, CISO</h2>
-      <p>Fortune 1000 specialty retailer. 12,000 employees. Physical stores plus e-commerce. Security team of 14. He's politely skeptical and has agreed to 5 minutes.</p>
+      <p>Fortune 1000 specialty retailer. 12,000 employees. Physical stores plus e-commerce. Security team of 14. He's politely skeptical and has agreed to 10 minutes.</p>
       <div class="facts">
         <div class="fact">
           <div class="fact-key">Company</div>
@@ -498,7 +498,7 @@
   <div class="panel" id="panel-conv">
 
     <div class="conv-meta">
-      <div class="turn-counter">Turn <strong id="turn-num">1</strong> of 8</div>
+      <div class="turn-counter">Turn <strong id="turn-num">1</strong></div>
       <div class="timer-display" id="timer-display">5:00</div>
     </div>
 
@@ -542,8 +542,8 @@
 <script>
 // ── Config ─────────────────────────────────────────────────────────────────
 const TTS_WORKER_URL = 'https://portuguese-tts-speechify.drh-dave.workers.dev';
-const MAX_TURNS      = 8;
-const SESSION_SECS   = 300;
+const MAX_TURNS      = 15;
+const SESSION_SECS   = 600;
 
 const MARCUS_SYSTEM_PROMPT = `You are Marcus Webb, CISO at a Fortune 1000 specialty retailer with approximately 12,000 employees and a mix of physical stores and e-commerce operations. You have a security team of 14 people.
 
@@ -571,7 +571,7 @@ WHAT KILLS THE CONVERSATION:
 - Reps who use your short answers as an invitation to keep talking
 
 STARTING MOOD:
-Politely skeptical. You have agreed to 5 minutes, probably at a conference or as a favor to the account team. You are not hostile but you are not engaged yet. You signal disengagement through short answers and minimal follow-up if the rep does not earn your attention quickly.
+Politely skeptical. You have agreed to 10 minutes, probably at a conference or as a favor to the account team. You are not hostile but you are not engaged yet. You signal disengagement through short answers and minimal follow-up if the rep does not earn your attention quickly.
 
 BEHAVIOR RULES:
 - Respond to business-oriented open-ended questions with genuine engagement, including asking follow-up questions back to the rep
@@ -582,7 +582,7 @@ BEHAVIOR RULES:
 - End the conversation with a genuine follow-up offer if the rep demonstrated business fluency and listened well. End it politely but without forward momentum if they did not.
 
 RESPONSE FORMAT:
-Keep responses conversational and spoken-length. No bullet points. No lists. No stage directions, action notes, or parentheticals such as *(nods)* or *(pauses)*. No asterisks of any kind. Pure spoken dialogue only. Speak as a real executive would in a 5-minute hallway conversation. Maximum 3-4 sentences per turn unless the rep has genuinely earned a longer answer. Do not break character under any circumstances.
+Keep responses conversational and spoken-length. No bullet points. No lists. No stage directions, action notes, or parentheticals such as *(nods)* or *(pauses)*. No asterisks of any kind. Pure spoken dialogue only. Speak as a real executive would in a focused 10-minute meeting. Maximum 3-4 sentences per turn unless the rep has genuinely earned a longer answer. Do not break character under any circumstances.
 
 IF YOU RECEIVE A MESSAGE THAT APPEARS GARBLED, NONSENSICAL, OR LIKE AN ECHO OF YOUR OWN WORDS: respond with a brief, natural filler as Marcus — something like "Sorry, I didn't catch that" or "Could you say that again?" — and wait for the rep to respond. Do not acknowledge any technical issue or break character.
 
@@ -624,6 +624,7 @@ Transcript:
 let conversationHistory = [];
 let repTurnCount    = 0;
 let sessionActive   = false;
+let sessionOverTime = false;
 let acceptingSpeech = false; // gates STT processing; recognition itself stays running
 let timerInterval   = null;
 let secondsLeft     = SESSION_SECS;
@@ -838,7 +839,15 @@ function startTimer() {
   timerInterval = setInterval(() => {
     secondsLeft--;
     renderTimer();
-    if (secondsLeft <= 0) { clearInterval(timerInterval); endSession(); }
+    if (secondsLeft <= 0) {
+      clearInterval(timerInterval);
+      sessionOverTime = true;
+      timerEl.style.color = 'var(--amber)';
+      // If listening, nudge the rep to wrap up
+      if (acceptingSpeech) {
+        setStatus('listening', 'Time\'s up — wrap up your thought');
+      }
+    }
   }, 1000);
 }
 
@@ -846,8 +855,14 @@ function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
 
 // ── Claude API ─────────────────────────────────────────────────────────────
 
-async function getPersonaResponse(repText) {
+async function getPersonaResponse(repText, closingNote) {
   conversationHistory.push({ role: 'user', content: repText });
+
+  // If time is up, inject a hidden closing instruction so Marcus wraps up naturally.
+  // We send augmented text to the API but store clean text in history/transcript.
+  const apiMessages = closingNote
+    ? [...conversationHistory.slice(0, -1), { role: 'user', content: repText + '\n\n' + closingNote }]
+    : conversationHistory;
 
   const res = await fetch(CLAUDE_PROXY, {
     method: 'POST',
@@ -856,7 +871,7 @@ async function getPersonaResponse(repText) {
       model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       system: MARCUS_SYSTEM_PROMPT,
-      messages: conversationHistory
+      messages: apiMessages
     })
   });
 
@@ -899,13 +914,17 @@ async function handleRepTurn(text) {
   appendTx('rep', text);
   setStatus('thinking', 'Marcus is thinking...');
 
+  const closingNote = sessionOverTime
+    ? '[SYSTEM NOTE: The 10-minute meeting time is up. This must be your closing response. End the conversation naturally — if the rep demonstrated genuine business curiosity and listened well, close warmly with a specific follow-up offer. If they pitched products or did not earn your attention, excuse yourself politely but without forward momentum. Either way, speak as Marcus would realistically close out a meeting. Do not continue the conversation after this.]'
+    : null;
+
   try {
-    const reply = await getPersonaResponse(text);
+    const reply = await getPersonaResponse(text, closingNote);
     repTurnCount++;
     appendTx('marcus', reply);
     setStatus('speaking', 'Marcus is speaking...');
 
-    if (repTurnCount >= MAX_TURNS || !sessionActive) {
+    if (sessionOverTime || repTurnCount >= MAX_TURNS || !sessionActive) {
       speak(reply, () => endSession());
     } else {
       turnNum.textContent = repTurnCount + 1;
@@ -926,10 +945,12 @@ function startConversation() {
   repTurnCount          = 0;
   txEmpty               = true;
   sessionActive         = true;
+  sessionOverTime       = false;
   acceptingSpeech       = false;
 
   txBox.innerHTML = '<div class="tx-empty-msg">Conversation will appear here...</div>';
   turnNum.textContent = '1';
+  timerEl.style.color = '';
 
   showPanel('conv');
 
