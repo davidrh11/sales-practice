@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Value-Based Sales Practice — CISO Conversation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0f1117;
+      --surface:    #1a1d27;
+      --border:     #2a2d3a;
+      --accent:     #00c4b4;
+      --accent-dim: #007a70;
+      --text:       #e8e9f0;
+      --muted:      #8b8fa8;
+      --green:      #22c55e;
+      --amber:      #f59e0b;
+      --red:        #ef4444;
+      --sans:       'Inter', system-ui, sans-serif;
+      --mono:       'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px 80px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── App header ── */
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+
+    .brand {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .brand-sep {
+      width: 1px;
+      height: 14px;
+      background: var(--border);
+    }
+
+    .brand-sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 26px;
+      margin-bottom: 12px;
+    }
+
+    .card-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .card h2 {
+      font-size: 21px;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+
+    .card > p {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    /* ── Persona facts grid ── */
+    .facts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .fact {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .fact-key {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
+    }
+
+    .fact-val {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* ── Objective list ── */
+    .obj-list {
+      list-style: none;
+      margin-top: 8px;
+    }
+
+    .obj-list li {
+      font-size: 14px;
+      color: var(--muted);
+      padding: 5px 0 5px 20px;
+      position: relative;
+      line-height: 1.55;
+    }
+
+    .obj-list li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    /* ── Input ── */
+    .input-group {
+      margin-bottom: 12px;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .input-group label em {
+      font-style: normal;
+      opacity: 0.5;
+    }
+
+    .input-group input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .input-group input:focus { border-color: var(--accent); }
+
+    .input-group input::placeholder {
+      color: var(--muted);
+      opacity: 0.35;
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      color: #090c10;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary:hover:not(:disabled) { background: #05d9c8; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-ghost {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      margin-top: 10px;
+    }
+
+    .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+
+    .note {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 10px;
+      opacity: 0.55;
+    }
+
+    /* ── Warning box ── */
+    .warn-box {
+      background: rgba(239, 68, 68, 0.07);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+      font-size: 14px;
+      color: var(--red);
+      line-height: 1.5;
+    }
+
+    /* ── Conversation panel ── */
+    .conv-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .turn-counter {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .turn-counter strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .timer-display {
+      font-size: 13px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 18px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .status-dot.idle     { background: var(--border); }
+    .status-dot.speaking { background: var(--accent); }
+    .status-dot.thinking { background: var(--amber); }
+    .status-dot.listening {
+      background: var(--green);
+      animation: mic-pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes mic-pulse {
+      0%, 100% { transform: scale(1);   opacity: 1; }
+      50%       { transform: scale(0.65); opacity: 0.5; }
+    }
+
+    .status-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* ── Transcript box ── */
+    .tx-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+      scroll-behavior: smooth;
+    }
+
+    .tx-empty-msg {
+      font-size: 14px;
+      color: var(--muted);
+      opacity: 0.4;
+    }
+
+    .tx-sep {
+      height: 1px;
+      background: var(--border);
+      margin: 14px 0;
+      opacity: 0.5;
+    }
+
+    .tx-speaker {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .tx-speaker.marcus { color: var(--accent); }
+    .tx-speaker.rep    { color: var(--green); }
+
+    .tx-text {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+
+    /* ── Debrief panel ── */
+    .overall-card {
+      background: var(--surface);
+      border: 1px solid var(--accent-dim);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 12px;
+    }
+
+    .overall-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .overall-text {
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    .score-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .score-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .score-pill {
+      flex-shrink: 0;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .score-pill.yes     { background: rgba(34,197,94,0.12);  color: var(--green); }
+    .score-pill.partial { background: rgba(245,158,11,0.12); color: var(--amber); }
+    .score-pill.no      { background: rgba(239,68,68,0.12);  color: var(--red); }
+
+    .score-detail { flex: 1; min-width: 0; }
+
+    .score-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .score-obs {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      margin-top: 22px;
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="app-header">
+    <div class="brand">Sales Practice</div>
+    <div class="brand-sep"></div>
+    <div class="brand-sub">Value-Based Conversations</div>
+  </div>
+
+  <!-- ══ BRIEF ══════════════════════════════════════════ -->
+  <div class="panel active" id="panel-brief">
+
+    <div id="chrome-warn" class="warn-box" style="display:none">
+      Voice input requires Google Chrome. This tool will not work in Safari or Firefox.
+      Please reopen in Chrome.
+    </div>
+
+    <div class="card">
+      <div class="card-label">Today's Scenario</div>
+      <h2>Marcus Webb, CISO</h2>
+      <p>Fortune 1000 specialty retailer. 12,000 employees. Physical stores plus e-commerce. Security team of 14. He's politely skeptical and has agreed to 5 minutes.</p>
+      <div class="facts">
+        <div class="fact">
+          <div class="fact-key">Company</div>
+          <div class="fact-val">Fortune 1000 retailer</div>
+        </div>
+        <div class="fact">
+          <div class="fact-key">Security Team</div>
+          <div class="fact-val">14 people, alert fatigue</div>
+        </div>
+        <div class="fact">
+          <div class="fact-key">Vendor Footprint</div>
+          <div class="fact-val">Network only — firewall vendor</div>
+        </div>
+        <div class="fact">
+          <div class="fact-key">Reports To</div>
+          <div class="fact-val">CIO — budget tension</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Your Objective</div>
+      <ul class="obj-list">
+        <li>Earn his attention through business questions, not features</li>
+        <li>Understand his priorities before offering any solutions</li>
+        <li>Zero product names or feature pitches in the first two minutes</li>
+        <li>Secure a genuine next step by turn 8</li>
+      </ul>
+    </div>
+
+    <button class="btn-primary" id="btn-start">Start Conversation</button>
+    <p class="note">Chrome required — Safari and Firefox do not support voice input</p>
+
+  </div>
+
+  <!-- ══ CONVERSATION ════════════════════════════════════ -->
+  <div class="panel" id="panel-conv">
+
+    <div class="conv-meta">
+      <div class="turn-counter">Turn <strong id="turn-num">1</strong> of 8</div>
+      <div class="timer-display" id="timer-display">5:00</div>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-dot idle" id="status-dot"></div>
+      <div class="status-label" id="status-label">Initializing...</div>
+    </div>
+
+    <div class="tx-box" id="tx-box">
+      <div class="tx-empty-msg">Conversation will appear here...</div>
+    </div>
+
+    <button class="btn-ghost" id="btn-end-early">End Session Early</button>
+
+  </div>
+
+  <!-- ══ DEBRIEF ═════════════════════════════════════════ -->
+  <div class="panel" id="panel-debrief">
+
+    <div class="card">
+      <div class="card-label">Session Complete</div>
+      <h2>Conversation Debrief</h2>
+      <p>AI-scored across five selling criteria. Review the transcript below to see what landed and what didn't.</p>
+    </div>
+
+    <div class="overall-card">
+      <div class="overall-label">Overall</div>
+      <div class="overall-text" id="overall-text">Analyzing conversation...</div>
+    </div>
+
+    <div class="score-list" id="score-list"></div>
+
+    <div class="section-label">Full Transcript</div>
+    <div class="tx-box" id="debrief-tx"></div>
+
+    <button class="btn-primary" id="btn-restart" style="margin-top:20px">Practice Again</button>
+
+  </div>
+
+</div>
+<script>
+// ── Config ─────────────────────────────────────────────────────────────────
+const TTS_WORKER_URL = 'https://portuguese-tts-speechify.drh-dave.workers.dev';
+const MAX_TURNS      = 8;
+const SESSION_SECS   = 300;
+
+const MARCUS_SYSTEM_PROMPT = `You are Marcus Webb, CISO at a Fortune 1000 specialty retailer with approximately 12,000 employees and a mix of physical stores and e-commerce operations. You have a security team of 14 people.
+
+BACKGROUND:
+You came up through IT risk and audit, not engineering. You report to the CIO, which creates budget tension since the CIO controls infrastructure spend and does not always prioritize security investment. You inherited a fragmented vendor environment from a predecessor who bought point solutions reactively after incidents. You are two years into a platform consolidation initiative that is moving slower than planned, partly because of budget pressure and partly because business units resist changes that touch POS or e-commerce uptime. The incumbent security vendor is already in your environment, primarily on the network side. You do not think of them as a strategic partner. You think of them as a firewall vendor.
+
+WHAT YOU CARE ABOUT:
+- Reducing operational complexity without introducing business disruption, particularly anything touching stores or e-commerce infrastructure
+- Demonstrating security ROI to a CFO who sees security as overhead
+- PCI-DSS regulatory exposure, which gets board attention
+- Your team's capacity: 14 people cannot keep up manually, alert fatigue is real
+- You are quietly concerned about AI-driven threats your current stack was not designed to detect
+
+WHAT EARNS YOUR ATTENTION:
+- Questions about your business priorities, not your security stack
+- Evidence the rep understands retail operations and the business consequences of a breach: brand damage, lost consumer trust, regulatory fines, store downtime
+- Someone who asks about your team capacity and operational complexity before offering anything
+- A rep who listens more than they talk in the first two minutes
+
+WHAT KILLS THE CONVERSATION:
+- Product names or platform features in the first two minutes
+- Threat landscape statistics you already know
+- Any variation of "let me tell you what we're seeing across our customer base" as an opener
+- Being told what your problems are rather than asked
+- Reps who use your short answers as an invitation to keep talking
+
+STARTING MOOD:
+Politely skeptical. You have agreed to 5 minutes, probably at a conference or as a favor to the account team. You are not hostile but you are not engaged yet. You signal disengagement through short answers and minimal follow-up if the rep does not earn your attention quickly.
+
+BEHAVIOR RULES:
+- Respond to business-oriented open-ended questions with genuine engagement, including asking follow-up questions back to the rep
+- Give short, polite, closed answers if the rep starts explaining products, features, or threat statistics
+- Redirect explicitly if the rep is clearly pitching: say something like "I appreciate that, but I'm less interested in the product story right now. What are you trying to understand about where we are?"
+- Only reveal the platform consolidation initiative if the rep asks something that earns it: questions about operational complexity, vendor sprawl, team capacity, or what is slowing down your roadmap
+- Only reveal your AI-era threat concern if the rep asks where you feel least confident or what is keeping you up at night, not as a response to a product pitch about AI
+- End the conversation with a genuine follow-up offer if the rep demonstrated business fluency and listened well. End it politely but without forward momentum if they did not.
+
+RESPONSE FORMAT:
+Keep responses conversational and spoken-length. No bullet points. No lists. No stage directions, action notes, or parentheticals such as *(nods)* or *(pauses)*. No asterisks of any kind. Pure spoken dialogue only. Speak as a real executive would in a 5-minute hallway conversation. Maximum 3-4 sentences per turn unless the rep has genuinely earned a longer answer. Do not break character under any circumstances.
+
+IF YOU RECEIVE A MESSAGE THAT APPEARS GARBLED, NONSENSICAL, OR LIKE AN ECHO OF YOUR OWN WORDS: respond with a brief, natural filler as Marcus — something like "Sorry, I didn't catch that" or "Could you say that again?" — and wait for the rep to respond. Do not acknowledge any technical issue or break character.
+
+CONVERSATION CONTEXT:
+The conversation has already started. You have just said your opening line: "Hey, good to meet you. I've got a few minutes before my next session. What's on your mind?" — The message you receive next is the sales rep's response to that. Continue naturally from there.`;
+
+const MARCUS_OPENING = "Hey, good to meet you. I've got a few minutes before my next session. What's on your mind?";
+
+const SCORING_PROMPT = `You are evaluating a sales rep's practice conversation with a CISO buyer persona.
+Review the conversation transcript below and score the rep on exactly 5 criteria.
+Return ONLY valid JSON, no preamble, no markdown, no explanation outside the JSON structure.
+
+Score each criterion as: "yes", "partial", or "no"
+Include a one-sentence specific observation for each.
+
+JSON structure required:
+{
+  "scores": {
+    "open_ended_questions": { "score": "yes|partial|no", "observation": "..." },
+    "business_acumen": { "score": "yes|partial|no", "observation": "..." },
+    "avoided_product_pitch": { "score": "yes|partial|no", "observation": "..." },
+    "listened_and_adapted": { "score": "yes|partial|no", "observation": "..." },
+    "earned_next_step": { "score": "yes|partial|no", "observation": "..." }
+  },
+  "overall": "one sentence summary of how the conversation went"
+}
+
+Criteria definitions:
+- open_ended_questions: Rep asked questions that invited the executive to share priorities, concerns, or context rather than yes/no questions
+- business_acumen: Rep demonstrated understanding of business outcomes, operational risk, board exposure, or financial impact rather than staying at the technology layer
+- avoided_product_pitch: No product names or feature explanations before the executive opened the door
+- listened_and_adapted: Rep's questions shifted based on what the executive said, not a scripted sequence
+- earned_next_step: Executive offered a follow-up, asked a genuine question back, or volunteered an internal priority
+
+Transcript:
+`;
+
+// ── State ──────────────────────────────────────────────────────────────────
+let conversationHistory = [];
+let repTurnCount    = 0;
+let sessionActive   = false;
+let acceptingSpeech = false; // gates STT processing; recognition itself stays running
+let timerInterval   = null;
+let secondsLeft     = SESSION_SECS;
+let txEmpty         = true;
+const CLAUDE_PROXY  = 'https://sales-convo-claude-proxy.drh-dave.workers.dev/';
+let pendingText     = '';
+let silenceTimer    = null;
+let currentAudio    = null;
+const audioCache    = {};
+
+// ── DOM ────────────────────────────────────────────────────────────────────
+const panelBrief   = document.getElementById('panel-brief');
+const panelConv    = document.getElementById('panel-conv');
+const panelDebrief = document.getElementById('panel-debrief');
+const statusDot    = document.getElementById('status-dot');
+const statusLabel  = document.getElementById('status-label');
+const turnNum      = document.getElementById('turn-num');
+const timerEl      = document.getElementById('timer-display');
+const txBox        = document.getElementById('tx-box');
+const scoreListEl  = document.getElementById('score-list');
+const overallTextEl= document.getElementById('overall-text');
+const debriefTxEl  = document.getElementById('debrief-tx');
+
+// ── Panel switching ────────────────────────────────────────────────────────
+function showPanel(name) {
+  [panelBrief, panelConv, panelDebrief].forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+// ── Chrome detection ───────────────────────────────────────────────────────
+const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+if (!isChrome) {
+  document.getElementById('chrome-warn').style.display = 'block';
+  document.getElementById('btn-start').disabled = true;
+}
+
+// ── Status ─────────────────────────────────────────────────────────────────
+function setStatus(state, text) {
+  statusDot.className = 'status-dot ' + state;
+  statusLabel.textContent = text;
+}
+
+// ── TTS ────────────────────────────────────────────────────────────────────
+function cleanForSpeech(text) {
+  return text
+    .replace(/\*[^*]+\*/g, '')      // strip *stage directions* entirely
+    .replace(/\([^)]{1,60}\)/g, '') // strip short (parenthetical actions)
+    .replace(/_{1,2}(.*?)_{1,2}/g, '$1')
+    .replace(/`[^`]*`/g, '')
+    .replace(/#+\s*/g, '')
+    .replace(/[-•*]\s/g, '')
+    .replace(/\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function stopAudio() {
+  if (currentAudio) {
+    currentAudio.onended = null;
+    currentAudio.pause();
+    currentAudio = null;
+  }
+}
+
+function speak(text, onEnd) {
+  if (!text) { if (onEnd) onEnd(); return; }
+  const clean = cleanForSpeech(text);
+
+  const playAudio = (audio) => {
+    stopAudio();
+    currentAudio = audio;
+    audio.onended = () => { currentAudio = null; if (onEnd) onEnd(); };
+    audio.play().catch(err => { console.error('Audio play error:', err); currentAudio = null; if (onEnd) onEnd(); });
+  };
+
+  if (audioCache[clean]) {
+    const cached = audioCache[clean];
+    cached.currentTime = 0;
+    playAudio(cached);
+    return;
+  }
+
+  fetch(TTS_WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: clean, voice_id: 'henry' })
+  })
+    .then(r => { if (!r.ok) throw new Error('TTS ' + r.status); return r.blob(); })
+    .then(blob => {
+      const audio = new Audio(URL.createObjectURL(blob));
+      audioCache[clean] = audio;
+      playAudio(audio);
+    })
+    .catch(err => { console.error('TTS error:', err); if (onEnd) onEnd(); });
+}
+
+// ── STT ────────────────────────────────────────────────────────────────────
+// Recognition is started ONCE (from the Start button click, a real user gesture)
+// and kept alive for the whole session via continuous:true. We never stop/start
+// it mid-conversation — that's what causes Chrome to re-prompt for mic permission.
+// acceptingSpeech is the only gate: when false, onresult is a no-op.
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+
+if (SR) {
+  recognition = new SR();
+  recognition.lang           = 'en-US';
+  recognition.continuous     = true;
+  recognition.interimResults = false;
+
+  recognition.onresult = (event) => {
+    if (!acceptingSpeech) return;
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        pendingText += (pendingText ? ' ' : '') + event.results[i][0].transcript.trim();
+      }
+    }
+    clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(commitUtterance, 1800);
+  };
+
+  recognition.onerror = (event) => {
+    if (event.error === 'not-allowed') {
+      acceptingSpeech = false;
+      clearTimeout(silenceTimer);
+      pendingText = '';
+      setStatus('idle', 'Microphone access denied — check browser permissions and refresh');
+    }
+    // no-speech, aborted, audio-capture: onend handles restart
+  };
+
+  // Intentional no-op. Restarting from onend fires outside a user-gesture
+  // chain and triggers Chrome's mic-permission prompt every turn.
+  // enableMic() handles recovery if Chrome's no-speech timer stops recognition.
+  recognition.onend = () => {};
+}
+
+function startRecognition() {
+  if (!recognition) return;
+  try { recognition.start(); } catch(e) { console.error('STT start:', e); }
+}
+
+function stopRecognition() {
+  if (!recognition) return;
+  try { recognition.abort(); } catch(e) {}
+}
+
+function enableMic() {
+  if (!sessionActive) return;
+  pendingText = '';
+  clearTimeout(silenceTimer);
+  acceptingSpeech = true;
+  setStatus('listening', 'Your turn — speak now');
+  // If Chrome's no-speech timer stopped recognition, restart it. When recognition
+  // is already running this throws InvalidStateError — catch and ignore it.
+  try { recognition.start(); } catch(e) {
+    if (e.name !== 'InvalidStateError') console.error('STT enableMic:', e);
+  }
+}
+
+function disableMic() {
+  acceptingSpeech = false;
+  clearTimeout(silenceTimer);
+  pendingText = '';
+}
+
+function commitUtterance() {
+  if (!acceptingSpeech || !sessionActive) return;
+  const text = pendingText.trim();
+  pendingText = '';
+  acceptingSpeech = false;
+  clearTimeout(silenceTimer);
+
+  if (text.split(/\s+/).filter(Boolean).length < 3) {
+    setStatus('listening', 'That was too short — please say more');
+    setTimeout(() => { if (sessionActive) enableMic(); }, 1500);
+    return;
+  }
+  handleRepTurn(text);
+}
+
+// ── Transcript ─────────────────────────────────────────────────────────────
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function appendTx(speaker, text) {
+  if (txEmpty) {
+    txBox.innerHTML = '';
+    txEmpty = false;
+  } else {
+    const sep = document.createElement('div');
+    sep.className = 'tx-sep';
+    txBox.appendChild(sep);
+  }
+  const div = document.createElement('div');
+  div.innerHTML = `<div class="tx-speaker ${speaker}">${speaker.toUpperCase()}</div><div class="tx-text">${esc(text)}</div>`;
+  txBox.appendChild(div);
+  txBox.scrollTop = txBox.scrollHeight;
+}
+
+// ── Timer ──────────────────────────────────────────────────────────────────
+function renderTimer() {
+  const m = Math.floor(secondsLeft / 60);
+  const s = secondsLeft % 60;
+  timerEl.textContent = m + ':' + String(s).padStart(2, '0');
+}
+
+function startTimer() {
+  secondsLeft = SESSION_SECS;
+  renderTimer();
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    renderTimer();
+    if (secondsLeft <= 0) { clearInterval(timerInterval); endSession(); }
+  }, 1000);
+}
+
+function stopTimer() { clearInterval(timerInterval); timerInterval = null; }
+
+// ── Claude API ─────────────────────────────────────────────────────────────
+
+async function getPersonaResponse(repText) {
+  conversationHistory.push({ role: 'user', content: repText });
+
+  const res = await fetch(CLAUDE_PROXY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: MARCUS_SYSTEM_PROMPT,
+      messages: conversationHistory
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err.error && err.error.message) || 'API error ' + res.status);
+  }
+
+  const data  = await res.json();
+  const reply = data.content[0].text;
+  conversationHistory.push({ role: 'assistant', content: reply });
+  return reply;
+}
+
+async function scoreConversation() {
+  const lines = [
+    'MARCUS: ' + MARCUS_OPENING,
+    ...conversationHistory.map(m => (m.role === 'user' ? 'REP' : 'MARCUS') + ': ' + m.content)
+  ];
+
+  const res = await fetch(CLAUDE_PROXY, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: SCORING_PROMPT + lines.join('\n\n') }]
+    })
+  });
+
+  if (!res.ok) throw new Error('Scoring failed ' + res.status);
+  const data = await res.json();
+  const raw  = data.content[0].text.replace(/```json|```/g, '').trim();
+  return JSON.parse(raw);
+}
+
+// ── Conversation flow ──────────────────────────────────────────────────────
+async function handleRepTurn(text) {
+  disableMic();
+  appendTx('rep', text);
+  setStatus('thinking', 'Marcus is thinking...');
+
+  try {
+    const reply = await getPersonaResponse(text);
+    repTurnCount++;
+    appendTx('marcus', reply);
+    setStatus('speaking', 'Marcus is speaking...');
+
+    if (repTurnCount >= MAX_TURNS || !sessionActive) {
+      speak(reply, () => endSession());
+    } else {
+      turnNum.textContent = repTurnCount + 1;
+      speak(reply, () => { if (sessionActive) setTimeout(enableMic, 700); });
+    }
+  } catch(err) {
+    console.error('API error:', err);
+    setStatus('idle', 'Error: ' + err.message + ' — check console or refresh');
+  }
+}
+
+function startConversation() {
+  // Reset state
+  stopTimer();
+  stopAudio();
+  disableMic();
+  conversationHistory   = [];
+  repTurnCount          = 0;
+  txEmpty               = true;
+  sessionActive         = true;
+  acceptingSpeech       = false;
+
+  txBox.innerHTML = '<div class="tx-empty-msg">Conversation will appear here...</div>';
+  turnNum.textContent = '1';
+
+  showPanel('conv');
+
+  appendTx('marcus', MARCUS_OPENING);
+  setStatus('speaking', 'Marcus is speaking...');
+  startTimer();
+
+  // Start recognition NOW — we're inside the button-click gesture chain, so
+  // Chrome grants mic permission without prompting again this session.
+  startRecognition();
+
+  speak(MARCUS_OPENING, () => {
+    if (sessionActive) setTimeout(enableMic, 700);
+  });
+}
+
+async function endSession() {
+  if (!sessionActive) return; // guard against double-call
+  sessionActive = false;
+  stopTimer();
+  stopAudio();
+  disableMic();
+  stopRecognition();
+
+  // Copy transcript into debrief before switching panels
+  debriefTxEl.innerHTML = txBox.innerHTML;
+  showPanel('debrief');
+  overallTextEl.textContent = 'Analyzing your conversation...';
+  scoreListEl.innerHTML = '';
+
+  try {
+    const result = await scoreConversation();
+    renderScores(result);
+  } catch(err) {
+    console.error('Scoring error:', err);
+    overallTextEl.textContent = 'Scoring unavailable — review the transcript above.';
+  }
+}
+
+// ── Debrief rendering ──────────────────────────────────────────────────────
+const CRITERION_NAMES = {
+  open_ended_questions:  'Open-Ended Questions',
+  business_acumen:       'Business Acumen',
+  avoided_product_pitch: 'Avoided Product Pitch',
+  listened_and_adapted:  'Listened & Adapted',
+  earned_next_step:      'Earned Next Step'
+};
+
+function renderScores(data) {
+  overallTextEl.textContent = data.overall || '—';
+  scoreListEl.innerHTML = '';
+
+  for (const [key, val] of Object.entries(data.scores)) {
+    const pill  = val.score === 'yes' ? 'Yes' : val.score === 'partial' ? 'Part.' : 'No';
+    const row   = document.createElement('div');
+    row.className = 'score-row';
+    row.innerHTML = `
+      <div class="score-pill ${val.score}">${pill}</div>
+      <div class="score-detail">
+        <div class="score-name">${CRITERION_NAMES[key] || key}</div>
+        <div class="score-obs">${esc(val.observation || '')}</div>
+      </div>`;
+    scoreListEl.appendChild(row);
+  }
+}
+
+// ── Event bindings ─────────────────────────────────────────────────────────
+document.getElementById('btn-start').addEventListener('click', startConversation);
+
+document.getElementById('btn-end-early').addEventListener('click', () => {
+  if (confirm('End the session now and go to debrief?')) endSession();
+});
+
+document.getElementById('btn-restart').addEventListener('click', () => {
+  showPanel('brief');
+});
+
+</script>
+</body>
+</html>
