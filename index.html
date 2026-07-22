@@ -789,6 +789,10 @@ function disableMic() {
   acceptingSpeech = false;
   clearTimeout(silenceTimer);
   pendingText = '';
+  // Abort recognition so Marcus's TTS audio is never captured or sent for transcription.
+  // (Setting acceptingSpeech=false alone doesn't stop Chrome from sending buffered audio
+  // to Google's servers — the transcription can arrive after we re-enable the mic.)
+  if (recognition) try { recognition.abort(); } catch(e) {}
 }
 
 function commitUtterance() {
@@ -958,9 +962,11 @@ function startConversation() {
   setStatus('speaking', 'Marcus is speaking...');
   startTimer();
 
-  // Start recognition NOW — we're inside the button-click gesture chain, so
-  // Chrome grants mic permission without prompting again this session.
+  // Start recognition inside the button-click gesture chain so Chrome grants mic permission,
+  // then immediately abort — Marcus is about to speak and we don't want his TTS captured.
+  // enableMic() restarts recognition when it's the rep's turn.
   startRecognition();
+  if (recognition) try { recognition.abort(); } catch(e) {}
 
   speak(MARCUS_OPENING, () => {
     if (sessionActive) setTimeout(enableMic, 700);
