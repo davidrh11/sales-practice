@@ -436,6 +436,47 @@
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Debrief action buttons ── */
+    .debrief-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn-ghost-sm {
+      padding: 11px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-ghost-sm:hover { border-color: var(--muted); color: var(--text); }
+    .btn-ghost-sm.copied { border-color: var(--green); color: var(--green); }
+
+    /* ── Print styles ── */
+    @media print {
+      body { background: #fff; color: #111; padding: 20px; }
+      .app-header, #panel-brief, #panel-conv, .debrief-actions, #btn-restart { display: none !important; }
+      #panel-debrief { display: block !important; }
+      .card, .overall-card, .score-row { background: #fff; border-color: #ccc; }
+      .card-label, .overall-label, .brand, .section-label { color: #555; }
+      .card h2, .overall-text, .score-name, .tx-text { color: #111; }
+      .score-obs, .muted { color: #555; }
+      .tx-box { max-height: none; overflow: visible; border-color: #ccc; }
+      .score-pill.yes     { background: #d4f5df; color: #166534; }
+      .score-pill.partial { background: #fef3c7; color: #92400e; }
+      .score-pill.no      { background: #fee2e2; color: #991b1b; }
+      .tx-speaker.marcus { color: #0a7a6e; }
+      .tx-speaker.rep    { color: #166534; }
+    }
   </style>
 </head>
 <body>
@@ -533,6 +574,11 @@
 
     <div class="section-label">Full Transcript</div>
     <div class="tx-box" id="debrief-tx"></div>
+
+    <div class="debrief-actions">
+      <button class="btn-ghost-sm" id="btn-copy">Copy to Clipboard</button>
+      <button class="btn-ghost-sm" id="btn-print">Save as PDF</button>
+    </div>
 
     <button class="btn-primary" id="btn-restart" style="margin-top:20px">Practice Again</button>
 
@@ -1022,6 +1068,49 @@ function renderScores(data) {
     scoreListEl.appendChild(row);
   }
 }
+
+// ── Debrief export ─────────────────────────────────────────────────────────
+function buildDebriefText() {
+  const lines = ['SALES PRACTICE DEBRIEF', '═'.repeat(40), ''];
+
+  const overall = document.getElementById('overall-text').textContent;
+  lines.push('OVERALL', overall, '');
+
+  lines.push('SCORES');
+  document.querySelectorAll('#score-list .score-row').forEach(row => {
+    const pill = row.querySelector('.score-pill').textContent.trim();
+    const name = row.querySelector('.score-name').textContent.trim();
+    const obs  = row.querySelector('.score-obs').textContent.trim();
+    lines.push(`[${pill}] ${name}`, `      ${obs}`, '');
+  });
+
+  lines.push('─'.repeat(40), 'TRANSCRIPT', '─'.repeat(40), '');
+  document.querySelectorAll('#debrief-tx > div').forEach(block => {
+    const speaker = block.querySelector('.tx-speaker');
+    const text    = block.querySelector('.tx-text');
+    if (speaker && text) {
+      lines.push(speaker.textContent.trim());
+      lines.push(text.textContent.trim());
+      lines.push('');
+    }
+  });
+
+  return lines.join('\n');
+}
+
+document.getElementById('btn-copy').addEventListener('click', () => {
+  const btn = document.getElementById('btn-copy');
+  navigator.clipboard.writeText(buildDebriefText()).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2000);
+  }).catch(() => {
+    btn.textContent = 'Copy failed — try PDF';
+    setTimeout(() => { btn.textContent = 'Copy to Clipboard'; }, 2000);
+  });
+});
+
+document.getElementById('btn-print').addEventListener('click', () => window.print());
 
 // ── Event bindings ─────────────────────────────────────────────────────────
 document.getElementById('btn-start').addEventListener('click', startConversation);
