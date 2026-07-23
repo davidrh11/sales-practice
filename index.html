@@ -403,9 +403,9 @@
       margin-top: 2px;
     }
 
-    .score-pill.yes     { background: rgba(34,197,94,0.12);  color: var(--green); }
-    .score-pill.partial { background: rgba(245,158,11,0.12); color: var(--amber); }
-    .score-pill.no      { background: rgba(239,68,68,0.12);  color: var(--red); }
+    .score-pill.high { background: rgba(34,197,94,0.12);  color: var(--green); }
+    .score-pill.mid  { background: rgba(245,158,11,0.12); color: var(--amber); }
+    .score-pill.low  { background: rgba(239,68,68,0.12);  color: var(--red); }
 
     .score-detail { flex: 1; min-width: 0; }
 
@@ -471,9 +471,9 @@
       .card h2, .overall-text, .score-name, .tx-text { color: #111; }
       .score-obs, .muted { color: #555; }
       .tx-box { max-height: none; overflow: visible; border-color: #ccc; }
-      .score-pill.yes     { background: #d4f5df; color: #166534; }
-      .score-pill.partial { background: #fef3c7; color: #92400e; }
-      .score-pill.no      { background: #fee2e2; color: #991b1b; }
+      .score-pill.high { background: #d4f5df; color: #166534; }
+      .score-pill.mid  { background: #fef3c7; color: #92400e; }
+      .score-pill.low  { background: #fee2e2; color: #991b1b; }
       .tx-speaker.marcus { color: #0a7a6e; }
       .tx-speaker.rep    { color: #166534; }
     }
@@ -641,27 +641,38 @@ const SCORING_PROMPT = `You are evaluating a sales rep's practice conversation w
 Review the conversation transcript below and score the rep on exactly 5 criteria.
 Return ONLY valid JSON, no preamble, no markdown, no explanation outside the JSON structure.
 
-Score each criterion as: "yes", "partial", or "no"
-Include a one-sentence specific observation for each.
+Score each criterion as an integer from 1 to 5:
+5 = Executed clearly and consistently throughout
+4 = Solid, with only minor gaps
+3 = Present but uneven — some good moments, some misses
+2 = Attempted but mostly ineffective
+1 = Absent or actively harmful to the conversation
+
+Include a one-sentence specific observation for each criterion.
 
 JSON structure required:
 {
   "scores": {
-    "open_ended_questions": { "score": "yes|partial|no", "observation": "..." },
-    "business_acumen": { "score": "yes|partial|no", "observation": "..." },
-    "avoided_product_pitch": { "score": "yes|partial|no", "observation": "..." },
-    "listened_and_adapted": { "score": "yes|partial|no", "observation": "..." },
-    "earned_next_step": { "score": "yes|partial|no", "observation": "..." }
+    "open_ended_questions": { "score": 4, "observation": "..." },
+    "business_acumen": { "score": 3, "observation": "..." },
+    "avoided_product_pitch": { "score": 5, "observation": "..." },
+    "listened_and_adapted": { "score": 4, "observation": "..." },
+    "earned_next_step": { "score": 5, "observation": "..." }
   },
   "overall": "one sentence summary of how the conversation went"
 }
 
 Criteria definitions:
-- open_ended_questions: Rep asked questions that invited the executive to share priorities, concerns, or context rather than yes/no questions
-- business_acumen: Rep demonstrated understanding of business outcomes, operational risk, board exposure, or financial impact rather than staying at the technology layer
-- avoided_product_pitch: No product names or feature explanations before the executive opened the door
-- listened_and_adapted: Rep's questions shifted based on what the executive said, not a scripted sequence
-- earned_next_step: Executive offered a follow-up, asked a genuine question back, or volunteered an internal priority
+
+- open_ended_questions: Rep asked questions that invited the executive to share priorities, concerns, or context rather than yes/no questions.
+
+- business_acumen: Rep demonstrated understanding of business outcomes, operational risk, board exposure, or financial impact rather than staying at the technology layer. Score SUBSTANCE ONLY — ignore verbal delivery, filler words, rambling sentence structure, or imprecise phrasing. A rep can be inelegant in delivery but still demonstrate strong business acumen. Score what they said, not how polished it sounded.
+
+- avoided_product_pitch: No product names or feature explanations before the executive opened the door.
+
+- listened_and_adapted: Rep's questions and responses shifted based on what the executive said, not a scripted sequence, and the rep gave the executive adequate space to speak. Two important notes: (1) If the executive misunderstood a rep's question and later acknowledged the misunderstanding or retracted a redirect ("that's a fair clarification"), do not count that exchange against the rep — the fault was the executive's. (2) If the rep dominated airtime through extended monologues that prevented meaningful executive engagement, or rambled so extensively that it consumed time the executive needed to share their own priorities, score lower — this reflects a failure to listen and adapt to conversational cues.
+
+- earned_next_step: Executive offered a follow-up, asked a genuine question back, or volunteered an internal priority.
 
 Transcript:
 `;
@@ -1055,18 +1066,34 @@ function renderScores(data) {
   overallTextEl.textContent = data.overall || '—';
   scoreListEl.innerHTML = '';
 
+  let total = 0;
   for (const [key, val] of Object.entries(data.scores)) {
-    const pill  = val.score === 'yes' ? 'Yes' : val.score === 'partial' ? 'Part.' : 'No';
+    const n     = parseInt(val.score, 10) || 0;
+    total      += n;
+    const band  = n >= 4 ? 'high' : n === 3 ? 'mid' : 'low';
     const row   = document.createElement('div');
     row.className = 'score-row';
     row.innerHTML = `
-      <div class="score-pill ${val.score}">${pill}</div>
+      <div class="score-pill ${band}">${n}/5</div>
       <div class="score-detail">
         <div class="score-name">${CRITERION_NAMES[key] || key}</div>
         <div class="score-obs">${esc(val.observation || '')}</div>
       </div>`;
     scoreListEl.appendChild(row);
   }
+
+  // Total score row
+  const totalBand = total >= 20 ? 'high' : total >= 13 ? 'mid' : 'low';
+  const totalRow  = document.createElement('div');
+  totalRow.className = 'score-row';
+  totalRow.style.marginTop = '6px';
+  totalRow.innerHTML = `
+    <div class="score-pill ${totalBand}" style="font-size:12px">${total}/25</div>
+    <div class="score-detail">
+      <div class="score-name" style="color:var(--muted);font-weight:500">Total Score</div>
+      <div class="score-obs">${total >= 20 ? 'Strong overall performance' : total >= 13 ? 'Solid with room to improve' : 'Significant gaps to address'}</div>
+    </div>`;
+  scoreListEl.appendChild(totalRow);
 }
 
 // ── Debrief export ─────────────────────────────────────────────────────────
